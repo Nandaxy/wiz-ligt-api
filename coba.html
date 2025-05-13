@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Kontrol Lampu WiZ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        accent: {
+                            50: '#fdf4ff',
+                            100: '#fae8ff',
+                            200: '#f5d0fe',
+                            300: '#f0abfc',
+                            400: '#e879f9',
+                            500: '#d946ef',
+                            600: '#c026d3',
+                            700: '#a21caf',
+                            800: '#86198f',
+                            900: '#701a75',
+                        },
+                        glass: {
+                            100: 'rgba(255, 255, 255, 0.1)',
+                            200: 'rgba(255, 255, 255, 0.2)',
+                            300: 'rgba(255, 255, 255, 0.3)',
+                            400: 'rgba(255, 255, 255, 0.4)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- jQuery CDN -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- jQuery UI for animations -->
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background 0.5s ease;
+        }
+        
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+        }
+        
+        .glassmorphism-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+        
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #d946ef;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(217, 70, 239, 0.7);
+            transition: all 0.2s ease;
+        }
+        
+        .slider-thumb::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(217, 70, 239, 0.9);
+        }
+        
+        .slider-thumb::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #d946ef;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(217, 70, 239, 0.7);
+            transition: all 0.2s ease;
+        }
+        
+        .slider-thumb::-moz-range-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(217, 70, 239, 0.9);
+        }
+        
+        .slider-thumb {
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+        }
+        
+        .btn-glow {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-glow:after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(217, 70, 239, 0.7);
+            transform: translateY(-3px);
+        }
+        
+        .btn-glow:hover:after {
+            left: 100%;
+            opacity: 1;
+        }
+        
+        .color-preview {
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .color-preview:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Custom color picker styling */
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-item {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-item:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 3px;
+            bottom: -5px;
+            left: 50%;
+            background: #d946ef;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            border-radius: 3px;
+        }
+        
+        .nav-item:hover:after,
+        .nav-item.active:after {
+            width: 80%;
+        }
+        
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .color-preset {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .color-preset:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="p-4">
+    <header class="container mx-auto px-4 py-4 mb-6">
+        <nav class="glassmorphism rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center">
+            <div class="flex items-center mb-4 sm:mb-0">
+                <i class="fas fa-lightbulb text-yellow-300 text-2xl mr-3"></i>
+                <h1 class="text-2xl font-bold text-white">Sistem Kontrol Lampu WiZ</h1>
+            </div>
+            <div class="flex space-x-6">
+                <a href="#" class="nav-item text-white font-medium active" data-page="home">
+                    <i class="fas fa-home mr-2"></i>Beranda
+                </a>
+                <a href="#" class="nav-item text-white font-medium" data-page="scenes">
+                    <i class="fas fa-palette mr-2"></i>Adegan
+                </a>
+                <a href="#" class="nav-item text-white font-medium" data-page="settings">
+                    <i class="fas fa-cog mr-2"></i>Pengaturan
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-4 max-w-5xl">
+        <!-- Home Page -->
+        <div id="home" class="page" style="display: block;">
+            <div class="mb-6 flex justify-center">
+                <button 
+                    id="discoverBtn"
+                    class="glassmorphism bg-accent-600 bg-opacity-70 hover:bg-accent-700 text-white py-3 px-8 rounded-full flex items-center btn-glow"
+                >
+                    <i class="fas fa-search mr-2"></i>
+                    <span id="discoverText">Temukan Lampu</span>
+                </button>
+            </div>
+
+            <div id="lightsContainer" class="mb-8 hidden">
+                <label class="block text-lg font-medium mb-3 text-white drop-shadow-md">Pilih Lampu</label>
+                <div id="lightsList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <!-- Lights will be populated here -->
+                </div>
+            </div>
+
+            <div id="lightControlPanel" class="glassmorphism rounded-2xl p-6 mb-8 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                    <div>
+                        <h2 id="lightIp" class="text-2xl font-bold text-white"></h2>
+                        <p id="lightMac" class="text-sm text-white text-opacity-80"></p>
+                    </div>
+                    <button
+                        id="powerBtn"
+                        class="glassmorphism bg-green-500 bg-opacity-70 hover:bg-green-600 text-white py-2 px-6 rounded-full btn-glow"
+                    >
+                        <i class="fas fa-power-off mr-2"></i>Nyalakan
+                    </button>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-lg font-medium mb-2 text-white">Kecerahan</label>
+                    <div class="flex items-center gap-4">
+                        <i class="fas fa-sun text-yellow-300"></i>
+                        <input
+                            id="brightnessSlider"
+                            type="range"
+                            min="1"
+                            max="255"
+                            value="100"
+                            class="w-full slider-thumb"
+                        />
+                        <span id="brightnessValue" class="text-lg font-medium text-white min-w-[40px] text-center">100</span>
+                    </div>
+                </div>
+
+                <div class="border-b border-white border-opacity-20 mb-6">
+                    <div class="flex">
+                        <button
+                            id="colorTabBtn"
+                            class="py-3 px-6 border-b-2 border-accent-500 text-white font-medium"
+                        >
+                            <i class="fas fa-palette mr-2"></i>Kontrol Warna
+                        </button>
+                        <button
+                            id="scenesTabBtn"
+                            class="py-3 px-6 border-b-2 border-transparent text-white text-opacity-70 font-medium"
+                        >
+                            <i class="fas fa-film mr-2"></i>Adegan
+                        </button>
+                    </div>
+                </div>
+
+                <div id="colorTab">
+                    <div class="mb-6">
+                        <label class="block text-lg font-medium mb-2 text-white">Temperatur Warna</label>
+                        <div class="flex items-center gap-4">
+                            <i class="fas fa-temperature-low text-blue-300"></i>
+                            <input
+                                id="colorTempSlider"
+                                type="range"
+                                min="2200"
+                                max="6500"
+                                value="2700"
+                                class="w-full slider-thumb"
+                            />
+                            <span id="colorTempValue" class="text-lg font-medium text-white min-w-[70px] text-center">2700K</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-lg font-medium mb-3 text-white">Warna Kustom</label>
+                        
+                        <div class="flex flex-col sm:flex-row items-center gap-6 mb-6">
+                            <div class="flex items-center gap-4">
+                                <div 
+                                    id="colorPreview"
+                                    class="w-16 h-16 rounded-full border border-white border-opacity-30 color-preview"
+                                    style="background-color: rgb(255, 255, 255)"
+                                ></div>
+                                <input 
+                                    type="color" 
+                                    id="colorPicker" 
+                                    value="#ffffff"
+                                    class="color-picker"
+                                >
+                            </div>
+                            <button
+                                id="applyColorBtn"
+                                class="glassmorphism bg-accent-600 bg-opacity-70 hover:bg-accent-700 text-white py-2 px-6 rounded-full btn-glow"
+                            >
+                                <i class="fas fa-paint-brush mr-2"></i>Terapkan Warna
+                            </button>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-lg font-medium mb-3 text-white">Warna Preset</label>
+                            <div class="flex flex-wrap gap-3 mb-4">
+                                <div class="color-preset" style="background-color: #FF0000" data-color="255,0,0"></div>
+                                <div class="color-preset" style="background-color: #00FF00" data-color="0,255,0"></div>
+                                <div class="color-preset" style="background-color: #0000FF" data-color="0,0,255"></div>
+                                <div class="color-preset" style="background-color: #FFFF00" data-color="255,255,0"></div>
+                                <div class="color-preset" style="background-color: #00FFFF" data-color="0,255,255"></div>
+                                <div class="color-preset" style="background-color: #FF00FF" data-color="255,0,255"></div>
+                                <div class="color-preset" style="background-color: #FFA500" data-color="255,165,0"></div>
+                                <div class="color-preset" style="background-color: #800080" data-color="128,0,128"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-white">Merah</label>
+                                <input
+                                    id="redSlider"
+                                    type="range"
+                                    min="0"
+                                    max="255"
+                                    value="255"
+                                    class="w-full slider-thumb"
+                                />
+                                <div id="redValue" class="text-sm text-center text-white mt-1">255</div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-white">Hijau</label>
+                                <input
+                                    id="greenSlider"
+                                    type="range"
+                                    min="0"
+                                    max="255"
+                                    value="255"
+                                    class="w-full slider-thumb"
+                                />
+                                <div id="greenValue" class="text-sm text-center text-white mt-1">255</div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-white">Biru</label>
+                                <input
+                                    id="blueSlider"
+                                    type="range"
+                                    min="0"
+                                    max="255"
+                                    value="255"
+                                    class="w-full slider-thumb"
+                                />
+                                <div id="blueValue" class="text-sm text-center text-white mt-1">255</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="scenesTab" class="hidden">
+                    <div class="mb-6">
+                        <label class="block text-lg font-medium mb-2 text-white">Kecepatan Adegan</label>
+                        <div class="flex items-center gap-4">
+                            <i class="fas fa-tachometer-alt text-blue-300"></i>
+                            <input
+                                id="sceneSpeedSlider"
+                                type="range"
+                                min="10"
+                                max="100"
+                                value="50"
+                                class="w-full slider-thumb"
+                            />
+                            <span id="sceneSpeedValue" class="text-lg font-medium text-white min-w-[40px] text-center">50</span>
+                        </div>
+                    </div>
+                    
+                    <div id="scenesList" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <!-- Scenes will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="noLightsMessage" class="glassmorphism text-center p-8 rounded-2xl hidden">
+                <p class="text-white text-lg">Tidak ada lampu yang ditemukan. Klik "Temukan Lampu" untuk memindai jaringan Anda.</p>
+            </div>
+        </div>
+        
+        <!-- Scenes Page -->
+        <div id="scenes" class="page">
+            <div class="glassmorphism rounded-2xl p-6 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-6">Koleksi Adegan</h2>
+                
+                <p class="text-white mb-6">Halaman ini menampilkan koleksi adegan yang tersedia untuk lampu WiZ Anda. Pilih lampu terlebih dahulu di halaman Beranda untuk menggunakan adegan ini.</p>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="scenesCollection">
+                    <div class="glassmorphism-dark rounded-xl p-4 flex flex-col items-center">
+                        <div class="w-16 h-16 rounded-full mb-3" style="background: linear-gradient(45deg, #ff0000, #ff8800, #ffff00, #88ff00, #00ff00, #00ff88, #00ffff, #0088ff, #0000ff, #8800ff, #ff00ff, #ff0088);"></div>
+                        <h3 class="text-white font-medium">Pelangi</h3>
+                        <p class="text-white text-opacity-70 text-sm text-center mt-2">Perubahan warna pelangi yang menenangkan</p>
+                    </div>
+                    
+                    <div class="glassmorphism-dark rounded-xl p-4 flex flex-col items-center">
+                        <div class="w-16 h-16 rounded-full mb-3" style="background: linear-gradient(45deg, #ff0000, #880000, #ff0000);"></div>
+                        <h3 class="text-white font-medium">Romantis</h3>
+                        <p class="text-white text-opacity-70 text-sm text-center mt-2">Nuansa merah yang hangat dan romantis</p>
+                    </div>
+                    
+                    <div class="glassmorphism-dark rounded-xl p-4 flex flex-col items-center">
+                        <div class="w-16 h-16 rounded-full mb-3" style="background: linear-gradient(45deg, #0088ff, #00ffff, #0088ff);"></div>
+                        <h3 class="text-white font-medium">Lautan</h3>
+                        <p class="text-white text-opacity-70 text-sm text-center mt-2">Efek gelombang laut yang menenangkan</p>
+                    </div>
+                    
+                    <div class="glassmorphism-dark rounded-xl p-4 flex flex-col items-center">
+                        <div class="w-16 h-16 rounded-full mb-3" style="background: linear-gradient(45deg, #ffffff, #dddddd, #ffffff);"></div>
+                        <h3 class="text-white font-medium">Fokus</h3>
+                        <p class="text-white text-opacity-70 text-sm text-center mt-2">Cahaya putih terang untuk konsentrasi</p>
+                    </div>
+                    
+                    <div class="glassmorphism-dark rounded-xl p-4 flex flex-col items-center">
+                        <div class="w-16 h-16 rounded-full mb-3" style="background: linear-gradient(45deg, #ff00ff, #8800ff, #ff00ff);"></div>
+                        <h3 class="text-white font-medium">Pesta</h3>
+                        <p class="text-white text-opacity-70 text-sm text-center mt-2">Warna-warna cerah yang berubah cepat</p>
+                    </div>
+                    
+                    <div class="glassmorphism-dark rounded-xl p-4 flex flex-col items-center">
+                        <div class="w-16 h-16 rounded-full mb-3" style="background: linear-gradient(45deg, #ffff00, #ff8800, #ffff00);"></div>
+                        <h3 class="text-white font-medium">Santai</h3>
+                        <p class="text-white text-opacity-70 text-sm text-center mt-2">Cahaya hangat yang menenangkan</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Page -->
+        <div id="settings" class="page">
+            <div class="glassmorphism rounded-2xl p-6 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-6">Pengaturan</h2>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-medium text-white mb-3">Tema Aplikasi</h3>
+                    <div class="flex gap-4">
+                        <button id="themePurple" class="glassmorphism bg-accent-600 bg-opacity-70 hover:bg-accent-700 text-white py-2 px-4 rounded-full btn-glow">
+                            <i class="fas fa-palette mr-2"></i>Ungu
+                        </button>
+                        <button id="themeBlue" class="glassmorphism bg-blue-600 bg-opacity-70 hover:bg-blue-700 text-white py-2 px-4 rounded-full btn-glow">
+                            <i class="fas fa-palette mr-2"></i>Biru
+                        </button>
+                        <button id="themeGreen" class="glassmorphism bg-green-600 bg-opacity-70 hover:bg-green-700 text-white py-2 px-4 rounded-full btn-glow">
+                            <i class="fas fa-palette mr-2"></i>Hijau
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-medium text-white mb-3">Penyimpanan Data</h3>
+                    <button id="clearStorageBtn" class="glassmorphism bg-red-600 bg-opacity-70 hover:bg-red-700 text-white py-2 px-4 rounded-full btn-glow">
+                        <i class="fas fa-trash-alt mr-2"></i>Hapus Data Tersimpan
+                    </button>
+                    <p class="text-white text-opacity-70 mt-2">Menghapus semua data lampu yang tersimpan di perangkat ini.</p>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-medium text-white mb-3">Tentang Aplikasi</h3>
+                    <p class="text-white text-opacity-90">Sistem Kontrol Lampu WiZ v1.0</p>
+                    <p class="text-white text-opacity-70 mt-1">Aplikasi ini memungkinkan Anda mengontrol lampu pintar WiZ melalui jaringan lokal.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="container mx-auto px-4 py-4 mt-6">
+        <div class="glassmorphism rounded-2xl p-4 text-center">
+            <p class="text-white text-opacity-70">© 2025 Sistem Kontrol Lampu WiZ. Dibuat dengan <i class="fas fa-heart text-red-500"></i></p>
+        </div>
+    </footer>
+
+    <script>
+        $(document).ready(function() {
+            // State variables
+            let lights = [];
+            let selectedLight = null;
+            let lightState = null;
+            let isLoading = false;
+            let scenes = [];
+            let customColor = { red: 255, green: 255, blue: 255 };
+            let brightness = 100;
+            let colorTemp = 2700;
+            let sceneSpeed = 50;
+            let activeTab = 'color';
+
+            // Initialize UI
+            updateColorPreview();
+            loadFromLocalStorage();
+            showNoLightsMessage();
+
+            // Navigation
+            $('.nav-item').on('click', function(e) {
+                e.preventDefault();
+                const targetPage = $(this).data('page');
+                
+                // Update active nav item
+                $('.nav-item').removeClass('active');
+                $(this).addClass('active');
+                
+                // Show target page, hide others
+                $('.page').hide();
+                $(`#${targetPage}`).fadeIn(300);
+            });
+
+            // Theme buttons
+            $('#themePurple').on('click', function() {
+                $('body').css('background', 'linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)');
+            });
+            
+            $('#themeBlue').on('click', function() {
+                $('body').css('background', 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)');
+            });
+            
+            $('#themeGreen').on('click', function() {
+                $('body').css('background', 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)');
+            });
+            
+            // Clear storage button
+            $('#clearStorageBtn').on('click', function() {
+                localStorage.removeItem('wizLights');
+                $(this).effect('highlight', { color: 'rgba(239, 68, 68, 0.3)' }, 500);
+                alert('Data lampu berhasil dihapus!');
+            });
+
+            // Event listeners
+            $('#discoverBtn').on('click', discoverLights);
+            $('#powerBtn').on('click', togglePower);
+            $('#brightnessSlider').on('input', function() {
+                brightness = parseInt($(this).val());
+                $('#brightnessValue').text(brightness);
+            });
+            $('#brightnessSlider').on('change', function() {
+                changeBrightness(brightness);
+            });
+            $('#colorTempSlider').on('input', function() {
+                colorTemp = parseInt($(this).val());
+                $('#colorTempValue').text(colorTemp + 'K');
+            });
+            $('#colorTempSlider').on('change', function() {
+                changeColorTemp(colorTemp);
+            });
+            
+            // Color preset buttons
+            $('.color-preset').on('click', function() {
+                const colorValues = $(this).data('color').split(',');
+                customColor = {
+                    red: parseInt(colorValues[0]),
+                    green: parseInt(colorValues[1]),
+                    blue: parseInt(colorValues[2])
+                };
+                
+                // Update sliders
+                $('#redSlider').val(customColor.red);
+                $('#greenSlider').val(customColor.green);
+                $('#blueSlider').val(customColor.blue);
+                $('#redValue').text(customColor.red);
+                $('#greenValue').text(customColor.green);
+                $('#blueValue').text(customColor.blue);
+                
+                // Update color picker
+                const hexColor = rgbToHex(customColor.red, customColor.green, customColor.blue);
+                $('#colorPicker').val(hexColor);
+                
+                updateColorPreview();
+                $(this).effect('pulsate', { times: 1 }, 300);
+                
+                // Auto apply the color
+                setColor();
+            });
+            
+            // Color picker event
+            $('#colorPicker').on('input', function() {
+                const hexColor = $(this).val();
+                // Convert hex to RGB
+                const r = parseInt(hexColor.substr(1, 2), 16);
+                const g = parseInt(hexColor.substr(3, 2), 16);
+                const b = parseInt(hexColor.substr(5, 2), 16);
+                
+                customColor = { red: r, green: g, blue: b };
+                
+                // Update sliders
+                $('#redSlider').val(r);
+                $('#greenSlider').val(g);
+                $('#blueSlider').val(b);
+                $('#redValue').text(r);
+                $('#greenValue').text(g);
+                $('#blueValue').text(b);
+                
+                updateColorPreview();
+            });
+            
+            $('#redSlider, #greenSlider, #blueSlider').on('input', function() {
+                customColor.red = parseInt($('#redSlider').val());
+                customColor.green = parseInt($('#greenSlider').val());
+                customColor.blue = parseInt($('#blueSlider').val());
+                $('#redValue').text(customColor.red);
+                $('#greenValue').text(customColor.green);
+                $('#blueValue').text(customColor.blue);
+                
+                // Update color picker
+                const hexColor = rgbToHex(customColor.red, customColor.green, customColor.blue);
+                $('#colorPicker').val(hexColor);
+                
+                updateColorPreview();
+            });
+            
+            $('#applyColorBtn').on('click', setColor);
+            $('#sceneSpeedSlider').on('input', function() {
+                sceneSpeed = parseInt($(this).val());
+                $('#sceneSpeedValue').text(sceneSpeed);
+            });
+            $('#colorTabBtn').on('click', function() {
+                setActiveTab('color');
+            });
+            $('#scenesTabBtn').on('click', function() {
+                setActiveTab('scenes');
+            });
+
+            // Helper function to convert RGB to HEX
+            function rgbToHex(r, g, b) {
+                return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            }
+
+            // Local Storage functions
+            function saveToLocalStorage() {
+                const data = {
+                    lights: lights,
+                    selectedLight: selectedLight
+                };
+                localStorage.setItem('wizLights', JSON.stringify(data));
+            }
+            
+            function loadFromLocalStorage() {
+                const data = localStorage.getItem('wizLights');
+                if (data) {
+                    const parsedData = JSON.parse(data);
+                    lights = parsedData.lights || [];
+                    selectedLight = parsedData.selectedLight;
+                    
+                    if (lights.length > 0) {
+                        renderLights();
+                        if (selectedLight) {
+                            fetchLightState(selectedLight);
+                        }
+                    }
+                }
+            }
+
+            // Functions
+            function setActiveTab(tab) {
+                activeTab = tab;
+                if (tab === 'color') {
+                    $('#colorTabBtn').addClass('border-accent-500 text-white').removeClass('border-transparent text-opacity-70');
+                    $('#scenesTabBtn').addClass('border-transparent text-opacity-70').removeClass('border-accent-500 text-white');
+                    $('#colorTab').fadeIn(300);
+                    $('#scenesTab').fadeOut(300);
+                } else {
+                    $('#scenesTabBtn').addClass('border-accent-500 text-white').removeClass('border-transparent text-opacity-70');
+                    $('#colorTabBtn').addClass('border-transparent text-opacity-70').removeClass('border-accent-500 text-white');
+                    $('#scenesTab').fadeIn(300);
+                    $('#colorTab').fadeOut(300);
+                }
+            }
+
+            function updateColorPreview() {
+                $('#colorPreview').css('background-color', `rgb(${customColor.red}, ${customColor.green}, ${customColor.blue})`);
+            }
+
+            function showNoLightsMessage() {
+                if (lights.length === 0 && !isLoading) {
+                    $('#noLightsMessage').fadeIn(500);
+                } else {
+                    $('#noLightsMessage').fadeOut(500);
+                }
+            }
+
+            // Discover available lights
+            async function discoverLights() {
+                isLoading = true;
+                $('#discoverText').text('Mencari...');
+                $('#discoverBtn').prop('disabled', true).addClass('opacity-70');
+                
+                try {
+                    const response = await fetch('http://localhost:5000/api/lights/discover');
+                    const result = await response.json();
+                    if (result.status) {
+                        lights = result.data;
+                        renderLights();
+                        
+                        // Save to local storage
+                        saveToLocalStorage();
+                        
+                        if (lights.length > 0 && !selectedLight) {
+                            selectLight(lights[0].ip);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to discover lights:", error);
+                    // Show error with animation
+                    $('#noLightsMessage').html('<p class="text-white text-lg">Kesalahan saat menghubungkan ke server. Silakan coba lagi.</p>')
+                        .fadeIn(500).effect('shake', { times: 3, distance: 5 }, 300);
+                } finally {
+                    isLoading = false;
+                    $('#discoverText').text('Temukan Lampu');
+                    $('#discoverBtn').prop('disabled', false).removeClass('opacity-70');
+                    showNoLightsMessage();
+                }
+            }
+
+            // Render lights list
+            function renderLights() {
+                if (lights.length > 0) {
+                    $('#lightsContainer').fadeIn(500);
+                    
+                    const lightsHtml = lights.map(light => `
+                        <button
+                            class="light-item glassmorphism p-4 rounded-xl transition-all duration-300 ${selectedLight === light.ip ? 'border-accent-500 bg-glass-300' : 'border-white border-opacity-20 hover:bg-glass-200'}"
+                            data-ip="${light.ip}"
+                        >
+                            <div class="font-medium text-white">
+                                <i class="fas fa-lightbulb text-yellow-300 mr-2"></i>IP: ${light.ip}
+                            </div>
+                            ${light.mac ? `<div class="text-sm text-white text-opacity-80">MAC: ${light.mac}</div>` : ''}
+                        </button>
+                    `).join('');
+                    
+                    $('#lightsList').html(lightsHtml);
+                    
+                    // Add click event to light items with animation
+                    $('.light-item').on('click', function() {
+                        const ip = $(this).data('ip');
+                        $(this).effect('highlight', { color: 'rgba(217, 70, 239, 0.3)' }, 500);
+                        selectLight(ip);
+                    });
+                } else {
+                    $('#lightsContainer').fadeOut(500);
+                }
+            }
+
+            // Select a light
+            function selectLight(ip) {
+                selectedLight = ip;
+                $('.light-item').removeClass('border-accent-500 bg-glass-300').addClass('border-white border-opacity-20');
+                $(`.light-item[data-ip="${ip}"]`).addClass('border-accent-500 bg-glass-300').removeClass('border-white border-opacity-20');
+                fetchLightState(ip);
+                
+                // Save selected light to local storage
+                saveToLocalStorage();
+            }
+
+            // Fetch light state
+            async function fetchLightState(ip) {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/lights/${ip}/state`);
+                    const result = await response.json();
+                    if (result.status) {
+                        lightState = result.data;
+                        updateUI();
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch light state:", error);
+                }
+            }
+
+            // Update UI with light state
+            function updateUI() {
+                if (!lightState) return;
+                
+                $('#lightControlPanel').fadeIn(500);
+                $('#lightIp').text(lightState.device.ip);
+                $('#lightMac').text(`MAC: ${lightState.device.mac}`);
+                
+                // Update power button with animation
+                if (lightState.power.is_on) {
+                    $('#powerBtn').html('<i class="fas fa-power-off mr-2"></i>Matikan')
+                        .removeClass('bg-green-500 bg-opacity-70 hover:bg-green-600')
+                        .addClass('bg-red-500 bg-opacity-70 hover:bg-red-600')
+                        .effect('highlight', { color: 'rgba(239, 68, 68, 0.3)' }, 500);
+                } else {
+                    $('#powerBtn').html('<i class="fas fa-power-off mr-2"></i>Nyalakan')
+                        .removeClass('bg-red-500 bg-opacity-70 hover:bg-red-600')
+                        .addClass('bg-green-500 bg-opacity-70 hover:bg-green-600')
+                        .effect('highlight', { color: 'rgba(34, 197, 94, 0.3)' }, 500);
+                }
+                
+                // Update sliders with animation
+                brightness = lightState.light.brightness;
+                $('#brightnessSlider').val(brightness);
+                $('#brightnessValue').text(brightness).effect('highlight', { color: 'rgba(255, 255, 255, 0.3)' }, 500);
+                
+                colorTemp = lightState.light.colortemp;
+                $('#colorTempSlider').val(colorTemp);
+                $('#colorTempValue').text(colorTemp + 'K').effect('highlight', { color: 'rgba(255, 255, 255, 0.3)' }, 500);
+                
+                customColor = {
+                    red: lightState.light.rgb.red,
+                    green: lightState.light.rgb.green,
+                    blue: lightState.light.rgb.blue
+                };
+                
+                $('#redSlider').val(customColor.red);
+                $('#greenSlider').val(customColor.green);
+                $('#blueSlider').val(customColor.blue);
+                $('#redValue').text(customColor.red);
+                $('#greenValue').text(customColor.green);
+                $('#blueValue').text(customColor.blue);
+                
+                // Update color picker
+                const hexColor = rgbToHex(customColor.red, customColor.green, customColor.blue);
+                $('#colorPicker').val(hexColor);
+                
+                updateColorPreview();
+                $('#colorPreview').effect('highlight', { color: 'rgba(255, 255, 255, 0.3)' }, 500);
+                
+                if (lightState.scene.speed) {
+                    sceneSpeed = lightState.scene.speed;
+                    $('#sceneSpeedSlider').val(sceneSpeed);
+                    $('#sceneSpeedValue').text(sceneSpeed);
+                }
+                
+                // Fetch scenes if not already loaded
+                if (scenes.length === 0) {
+                    fetchScenes();
+                } else {
+                    // Update active scene highlight
+                    $('.scene-item').removeClass('border-accent-500 bg-glass-300').addClass('border-white border-opacity-20');
+                    $(`.scene-item[data-id="${lightState.scene.id}"]`).addClass('border-accent-500 bg-glass-300').removeClass('border-white border-opacity-20');
+                }
+            }
+
+            // Fetch available scenes
+            async function fetchScenes() {
+                try {
+                    const response = await fetch('http://localhost:5000/api/lights/scenes');
+                    const result = await response.json();
+                    if (result.status) {
+                        scenes = result.data.scenes;
+                        renderScenes();
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch scenes:", error);
+                }
+            }
+
+            // Render scenes list
+            function renderScenes() {
+                if (scenes.length > 0) {
+                    const scenesHtml = scenes.map(scene => `
+                        <button
+                            class="scene-item glassmorphism p-4 rounded-xl transition-all duration-300 ${lightState && lightState.scene.id === scene.id ? 'border-accent-500 bg-glass-300' : 'border-white border-opacity-20 hover:bg-glass-200'}"
+                            data-id="${scene.id}"
+                        >
+                            <i class="fas fa-film text-accent-300 mr-2"></i>
+                            <span class="text-white">${scene.name}</span>
+                        </button>
+                    `).join('');
+                    
+                    $('#scenesList').html(scenesHtml);
+                    
+                    // Add click event to scene items with animation
+                    $('.scene-item').on('click', function() {
+                        const sceneId = $(this).data('id');
+                        $(this).effect('highlight', { color: 'rgba(217, 70, 239, 0.3)' }, 500);
+                        applyScene(sceneId);
+                    });
+                }
+            }
+
+            // Toggle light power
+            async function togglePower() {
+                if (!selectedLight || !lightState) return;
+                
+                // Add loading animation
+                $('#powerBtn').addClass('opacity-70').prop('disabled', true);
+                
+                const endpoint = lightState.power.is_on ? 
+                    `http://localhost:5000/api/lights/${selectedLight}/off` : 
+                    `http://localhost:5000/api/lights/${selectedLight}/on`;
+                
+                try {
+                    await fetch(endpoint);
+                    fetchLightState(selectedLight);
+                } catch (error) {
+                    console.error("Failed to toggle power:", error);
+                    $('#powerBtn').effect('shake', { times: 3, distance: 5 }, 300);
+                } finally {
+                    $('#powerBtn').removeClass('opacity-70').prop('disabled', false);
+                }
+            }
+
+            // Set brightness
+            async function changeBrightness(value) {
+                if (!selectedLight) return;
+                
+                try {
+                    await fetch(`http://localhost:5000/api/lights/${selectedLight}/brightness/${value}`);
+                    fetchLightState(selectedLight);
+                } catch (error) {
+                    console.error("Failed to set brightness:", error);
+                    $('#brightnessValue').effect('shake', { times: 3, distance: 5 }, 300);
+                }
+            }
+
+            // Set color temperature
+            async function changeColorTemp(value) {
+                if (!selectedLight) return;
+                
+                try {
+                    await fetch(`http://localhost:5000/api/lights/${selectedLight}/colortemp/${value}`);
+                    fetchLightState(selectedLight);
+                } catch (error) {
+                    console.error("Failed to set color temperature:", error);
+                    $('#colorTempValue').effect('shake', { times: 3, distance: 5 }, 300);
+                }
+            }
+
+            // Set RGB color
+            async function setColor() {
+                if (!selectedLight) return;
+                
+                // Add loading animation
+                $('#applyColorBtn').addClass('opacity-70').prop('disabled', true);
+                
+                try {
+                    await fetch(`http://localhost:5000/api/lights/${selectedLight}/color/${customColor.red}/${customColor.green}/${customColor.blue}/${brightness}`);
+                    $('#colorPreview').effect('pulsate', { times: 1 }, 300);
+                    fetchLightState(selectedLight);
+                } catch (error) {
+                    console.error("Failed to set color:", error);
+                    $('#colorPreview').effect('shake', { times: 3, distance: 5 }, 300);
+                } finally {
+                    $('#applyColorBtn').removeClass('opacity-70').prop('disabled', false);
+                }
+            }
+
+            // Apply scene
+            async function applyScene(sceneId) {
+                if (!selectedLight) return;
+                
+                try {
+                    await fetch(`http://localhost:5000/api/lights/${selectedLight}/scene/${sceneId}/${sceneSpeed}/${brightness}`);
+                    fetchLightState(selectedLight);
+                } catch (error) {
+                    console.error("Failed to set scene:", error);
+                    $(`.scene-item[data-id="${sceneId}"]`).effect('shake', { times: 3, distance: 5 }, 300);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
