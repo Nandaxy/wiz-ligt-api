@@ -40,6 +40,12 @@
                             200: 'rgba(255, 255, 255, 0.2)',
                             300: 'rgba(255, 255, 255, 0.3)',
                             400: 'rgba(255, 255, 255, 0.4)',
+                        },
+                        darkglass: {
+                            100: 'rgba(0, 0, 0, 0.1)',
+                            200: 'rgba(0, 0, 0, 0.2)',
+                            300: 'rgba(0, 0, 0, 0.3)',
+                            400: 'rgba(0, 0, 0, 0.4)',
                         }
                     }
                 }
@@ -52,12 +58,25 @@
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- GSAP for advanced animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            --dark-gradient: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #831843 100%);
+        }
+        
         body {
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            background: var(--primary-gradient);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             transition: background 0.5s ease;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body.dark-theme {
+            background: var(--dark-gradient);
         }
         
         .glassmorphism {
@@ -66,6 +85,13 @@
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .dark-theme .glassmorphism {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
         }
         
         .glassmorphism-dark {
@@ -74,6 +100,10 @@
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+        
+        .dark-theme .glassmorphism-dark {
+            background: rgba(0, 0, 0, 0.4);
         }
         
         .slider-thumb::-webkit-slider-thumb {
@@ -113,6 +143,10 @@
             border-radius: 5px;
             background: rgba(255, 255, 255, 0.3);
             outline: none;
+        }
+        
+        .dark-theme .slider-thumb {
+            background: rgba(255, 255, 255, 0.2);
         }
         
         .btn-glow {
@@ -221,25 +255,133 @@
             transform: scale(1.1);
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
         }
+        
+        /* Animated background */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .animated-circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.3;
+            filter: blur(60px);
+        }
+        
+        /* Theme toggle */
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .dark-theme .theme-toggle {
+            background: rgba(0, 0, 0, 0.4);
+        }
+        
+        .dark-theme .theme-toggle:after {
+            left: 33px;
+            background: #1e1b4b;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        /* Responsive improvements */
+        @media (max-width: 640px) {
+            .nav-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            
+            .nav-container::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .color-preset {
+                width: 35px;
+                height: 35px;
+            }
+            
+            input[type="color"] {
+                width: 50px;
+                height: 50px;
+            }
+        }
     </style>
 </head>
 <body class="p-4">
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="animated-circle" style="width: 300px; height: 300px; background: #6366f1; top: 10%; left: 10%;"></div>
+        <div class="animated-circle" style="width: 400px; height: 400px; background: #a855f7; top: 40%; left: 60%;"></div>
+        <div class="animated-circle" style="width: 350px; height: 350px; background: #ec4899; top: 70%; left: 20%;"></div>
+    </div>
+    
+    <!-- Notification -->
+    <div id="notification" class="notification glassmorphism">
+        <span id="notificationText"></span>
+    </div>
+
     <header class="container mx-auto px-4 py-4 mb-6">
         <nav class="glassmorphism rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center">
             <div class="flex items-center mb-4 sm:mb-0">
                 <i class="fas fa-lightbulb text-yellow-300 text-2xl mr-3"></i>
-                <h1 class="text-2xl font-bold text-white">Sistem Kontrol Lampu WiZ</h1>
+                <h1 class="text-lg md:text-2xl font-bold text-white">Sistem Kontrol Lampu WiZ</h1>
             </div>
-            <div class="flex space-x-6">
-                <a href="#" class="nav-item text-white font-medium active" data-page="home">
-                    <i class="fas fa-home mr-2"></i>Beranda
-                </a>
-                <a href="#" class="nav-item text-white font-medium" data-page="scenes">
-                    <i class="fas fa-palette mr-2"></i>Adegan
-                </a>
-                <a href="#" class="nav-item text-white font-medium" data-page="settings">
-                    <i class="fas fa-cog mr-2"></i>Pengaturan
-                </a>
+            <div class="flex items-center space-x-6">
+                <div class="nav-container flex space-x-6">
+                    <a href="#" class="nav-item text-white font-medium text-sm md:text-md active" data-page="home">
+                        <i class="fas fa-home mr-2"></i>Beranda
+                    </a>
+                    <a href="#" class="nav-item text-white font-medium text-sm md:text-md" data-page="scenes">
+                        <i class="fas fa-palette mr-2"></i>Adegan
+                    </a>
+                    <a href="#" class="nav-item text-white font-medium text-sm md:text-md" data-page="settings">
+                        <i class="fas fa-cog mr-2"></i>Pengaturan
+                    </a>
+                </div>
+                <div class="theme-toggle ml-4" id="themeToggle" title="Ubah Tema"></div>
             </div>
         </nav>
     </header>
@@ -490,7 +632,7 @@
                 
                 <div class="mb-6">
                     <h3 class="text-xl font-medium text-white mb-3">Tema Aplikasi</h3>
-                    <div class="flex gap-4">
+                    <div class="flex flex-wrap gap-4">
                         <button id="themePurple" class="glassmorphism bg-accent-600 bg-opacity-70 hover:bg-accent-700 text-white py-2 px-4 rounded-full btn-glow">
                             <i class="fas fa-palette mr-2"></i>Ungu
                         </button>
@@ -499,6 +641,9 @@
                         </button>
                         <button id="themeGreen" class="glassmorphism bg-green-600 bg-opacity-70 hover:bg-green-700 text-white py-2 px-4 rounded-full btn-glow">
                             <i class="fas fa-palette mr-2"></i>Hijau
+                        </button>
+                        <button id="themeOrange" class="glassmorphism bg-orange-600 bg-opacity-70 hover:bg-orange-700 text-white py-2 px-4 rounded-full btn-glow">
+                            <i class="fas fa-palette mr-2"></i>Oranye
                         </button>
                     </div>
                 </div>
@@ -513,8 +658,9 @@
                 
                 <div class="mb-6">
                     <h3 class="text-xl font-medium text-white mb-3">Tentang Aplikasi</h3>
-                    <p class="text-white text-opacity-90">Sistem Kontrol Lampu WiZ v1.0</p>
+                    <p class="text-white text-opacity-90">Sistem Kontrol Lampu WiZ v2.0</p>
                     <p class="text-white text-opacity-70 mt-1">Aplikasi ini memungkinkan Anda mengontrol lampu pintar WiZ melalui jaringan lokal.</p>
+                    <p class="text-white text-opacity-70 mt-1">Fitur: Kontrol warna, kecerahan, adegan, dan tema gelap/terang.</p>
                 </div>
             </div>
         </div>
@@ -539,12 +685,20 @@
             let colorTemp = 2700;
             let sceneSpeed = 50;
             let activeTab = 'color';
+            let isDarkTheme = false;
 
             // Initialize UI
             updateColorPreview();
             loadFromLocalStorage();
+            loadThemePreference();
             showNoLightsMessage();
+            initAnimatedBackground();
 
+            // Theme toggle
+            $('#themeToggle').on('click', function() {
+                toggleDarkTheme();
+            });
+            
             // Navigation
             $('.nav-item').on('click', function(e) {
                 e.preventDefault();
@@ -554,29 +708,48 @@
                 $('.nav-item').removeClass('active');
                 $(this).addClass('active');
                 
-                // Show target page, hide others
-                $('.page').hide();
-                $(`#${targetPage}`).fadeIn(300);
+                // Show target page, hide others with animation
+                $('.page').fadeOut(300);
+                setTimeout(() => {
+                    $(`#${targetPage}`).fadeIn(300);
+                }, 300);
             });
 
             // Theme buttons
             $('#themePurple').on('click', function() {
-                $('body').css('background', 'linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)');
+                document.documentElement.style.setProperty('--primary-gradient', 'linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)');
+                document.documentElement.style.setProperty('--dark-gradient', 'linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #831843 100%)');
+                updateAnimatedBackground(['#6366f1', '#a855f7', '#ec4899']);
+                showNotification('Tema Ungu diterapkan');
             });
             
             $('#themeBlue').on('click', function() {
-                $('body').css('background', 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)');
+                document.documentElement.style.setProperty('--primary-gradient', 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)');
+                document.documentElement.style.setProperty('--dark-gradient', 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #1e3a8a 100%)');
+                updateAnimatedBackground(['#3b82f6', '#2563eb', '#1d4ed8']);
+                showNotification('Tema Biru diterapkan');
             });
             
             $('#themeGreen').on('click', function() {
-                $('body').css('background', 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)');
+                document.documentElement.style.setProperty('--primary-gradient', 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)');
+                document.documentElement.style.setProperty('--dark-gradient', 'linear-gradient(135deg, #064e3b 0%, #065f46 50%, #064e3b 100%)');
+                updateAnimatedBackground(['#10b981', '#059669', '#047857']);
+                showNotification('Tema Hijau diterapkan');
+            });
+            
+            $('#themeOrange').on('click', function() {
+                document.documentElement.style.setProperty('--primary-gradient', 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)');
+                document.documentElement.style.setProperty('--dark-gradient', 'linear-gradient(135deg, #78350f 0%, #92400e 50%, #78350f 100%)');
+                updateAnimatedBackground(['#f59e0b', '#d97706', '#b45309']);
+                showNotification('Tema Oranye diterapkan');
             });
             
             // Clear storage button
             $('#clearStorageBtn').on('click', function() {
                 localStorage.removeItem('wizLights');
+                localStorage.removeItem('wizTheme');
                 $(this).effect('highlight', { color: 'rgba(239, 68, 68, 0.3)' }, 500);
-                alert('Data lampu berhasil dihapus!');
+                showNotification('Data lampu berhasil dihapus!');
             });
 
             // Event listeners
@@ -677,6 +850,84 @@
             function rgbToHex(r, g, b) {
                 return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
             }
+            
+            // Initialize animated background
+            function initAnimatedBackground() {
+                animateBackgroundCircles();
+            }
+            
+            // Animate background circles
+            function animateBackgroundCircles() {
+                gsap.to('.animated-circle', {
+                    x: 'random(-20, 20)',
+                    y: 'random(-20, 20)',
+                    scale: 'random(0.9, 1.1)',
+                    duration: 'random(10, 20)',
+                    ease: 'sine.inOut',
+                    repeat: -1,
+                    yoyo: true,
+                    stagger: 0.5
+                });
+            }
+            
+            // Update animated background colors
+            function updateAnimatedBackground(colors) {
+                $('.animated-circle').each(function(index) {
+                    const color = colors[index % colors.length];
+                    $(this).css('background', color);
+                });
+            }
+            
+            // Toggle dark theme
+            function toggleDarkTheme() {
+                isDarkTheme = !isDarkTheme;
+                if (isDarkTheme) {
+                    $('body').addClass('dark-theme');
+                    showNotification('Tema Gelap diaktifkan');
+                } else {
+                    $('body').removeClass('dark-theme');
+                    showNotification('Tema Terang diaktifkan');
+                }
+                
+                // Save theme preference
+                localStorage.setItem('wizTheme', isDarkTheme ? 'dark' : 'light');
+            }
+            
+            // Load theme preference
+            function loadThemePreference() {
+                const savedTheme = localStorage.getItem('wizTheme');
+                if (savedTheme === 'dark') {
+                    isDarkTheme = true;
+                    $('body').addClass('dark-theme');
+                }
+            }
+            
+            // Show notification
+            function showNotification(message, type = 'info') {
+                let bgColor;
+                switch(type) {
+                    case 'success':
+                        bgColor = 'bg-green-500';
+                        break;
+                    case 'error':
+                        bgColor = 'bg-red-500';
+                        break;
+                    case 'warning':
+                        bgColor = 'bg-yellow-500';
+                        break;
+                    default:
+                        bgColor = 'bg-blue-500';
+                }
+                
+                $('#notification').removeClass('bg-green-500 bg-red-500 bg-yellow-500 bg-blue-500')
+                    .addClass(bgColor + ' bg-opacity-70');
+                $('#notificationText').text(message);
+                $('#notification').addClass('show');
+                
+                setTimeout(() => {
+                    $('#notification').removeClass('show');
+                }, 3000);
+            }
 
             // Local Storage functions
             function saveToLocalStorage() {
@@ -750,12 +1001,15 @@
                         if (lights.length > 0 && !selectedLight) {
                             selectLight(lights[0].ip);
                         }
+                        
+                        showNotification(`${lights.length} lampu ditemukan!`, 'success');
                     }
                 } catch (error) {
                     console.error("Failed to discover lights:", error);
                     // Show error with animation
                     $('#noLightsMessage').html('<p class="text-white text-lg">Kesalahan saat menghubungkan ke server. Silakan coba lagi.</p>')
                         .fadeIn(500).effect('shake', { times: 3, distance: 5 }, 300);
+                    showNotification('Gagal menemukan lampu. Periksa koneksi Anda.', 'error');
                 } finally {
                     isLoading = false;
                     $('#discoverText').text('Temukan Lampu');
@@ -771,13 +1025,17 @@
                     
                     const lightsHtml = lights.map(light => `
                         <button
-                            class="light-item glassmorphism p-4 rounded-xl transition-all duration-300 ${selectedLight === light.ip ? 'border-accent-500 bg-glass-300' : 'border-white border-opacity-20 hover:bg-glass-200'}"
+                            class="light-item glassmorphism p-4 rounded-xl transition-all duration-300 flex items-center space-x-4 ${selectedLight === light.ip ? 'border-accent-500 bg-glass-300' : 'border-white border-opacity-20 hover:bg-glass-200'}"
                             data-ip="${light.ip}"
                         >
-                            <div class="font-medium text-white">
-                                <i class="fas fa-lightbulb text-yellow-300 mr-2"></i>IP: ${light.ip}
+                            <i class="fas fa-lightbulb text-yellow-300 text-2xl pl-3"></i>
+
+                            <div class="text-left pl-2">
+                                <div class="font-medium text-white">
+                                    IP: ${light.ip}
+                                </div>
+                                ${light.mac ? `<div class="text-sm text-white text-opacity-80">MAC: ${light.mac}</div>` : ''}
                             </div>
-                            ${light.mac ? `<div class="text-sm text-white text-opacity-80">MAC: ${light.mac}</div>` : ''}
                         </button>
                     `).join('');
                     
@@ -816,6 +1074,7 @@
                     }
                 } catch (error) {
                     console.error("Failed to fetch light state:", error);
+                    showNotification('Gagal mendapatkan status lampu', 'error');
                 }
             }
 
@@ -896,6 +1155,7 @@
                     }
                 } catch (error) {
                     console.error("Failed to fetch scenes:", error);
+                    showNotification('Gagal mendapatkan daftar adegan', 'error');
                 }
             }
 
@@ -937,9 +1197,11 @@
                 try {
                     await fetch(endpoint);
                     fetchLightState(selectedLight);
+                    showNotification(lightState.power.is_on ? 'Lampu dimatikan' : 'Lampu dinyalakan', 'success');
                 } catch (error) {
                     console.error("Failed to toggle power:", error);
                     $('#powerBtn').effect('shake', { times: 3, distance: 5 }, 300);
+                    showNotification('Gagal mengubah status lampu', 'error');
                 } finally {
                     $('#powerBtn').removeClass('opacity-70').prop('disabled', false);
                 }
@@ -952,9 +1214,11 @@
                 try {
                     await fetch(`http://localhost:5000/api/lights/${selectedLight}/brightness/${value}`);
                     fetchLightState(selectedLight);
+                    showNotification(`Kecerahan diatur ke ${value}`, 'success');
                 } catch (error) {
                     console.error("Failed to set brightness:", error);
                     $('#brightnessValue').effect('shake', { times: 3, distance: 5 }, 300);
+                    showNotification('Gagal mengatur kecerahan', 'error');
                 }
             }
 
@@ -965,13 +1229,15 @@
                 try {
                     await fetch(`http://localhost:5000/api/lights/${selectedLight}/colortemp/${value}`);
                     fetchLightState(selectedLight);
+                    showNotification(`Temperatur warna diatur ke ${value}K`, 'success');
                 } catch (error) {
                     console.error("Failed to set color temperature:", error);
                     $('#colorTempValue').effect('shake', { times: 3, distance: 5 }, 300);
+                    showNotification('Gagal mengatur temperatur warna', 'error');
                 }
             }
 
-            // Set RGB color
+            // Set RGB color - Updated to use query parameters
             async function setColor() {
                 if (!selectedLight) return;
                 
@@ -979,27 +1245,37 @@
                 $('#applyColorBtn').addClass('opacity-70').prop('disabled', true);
                 
                 try {
-                    await fetch(`http://localhost:5000/api/lights/${selectedLight}/color/${customColor.red}/${customColor.green}/${customColor.blue}/${brightness}`);
+                    // Updated to use query parameters as per the new API
+                    const url = `http://localhost:5000/api/lights/${selectedLight}/color?red=${customColor.red}&green=${customColor.green}&blue=${customColor.blue}&brightness=${brightness}`;
+                    await fetch(url);
+                    
                     $('#colorPreview').effect('pulsate', { times: 1 }, 300);
                     fetchLightState(selectedLight);
+                    showNotification('Warna berhasil diterapkan', 'success');
                 } catch (error) {
                     console.error("Failed to set color:", error);
                     $('#colorPreview').effect('shake', { times: 3, distance: 5 }, 300);
+                    showNotification('Gagal mengatur warna', 'error');
                 } finally {
                     $('#applyColorBtn').removeClass('opacity-70').prop('disabled', false);
                 }
             }
 
-            // Apply scene
+            // Apply scene - Updated to use query parameters
             async function applyScene(sceneId) {
                 if (!selectedLight) return;
                 
                 try {
-                    await fetch(`http://localhost:5000/api/lights/${selectedLight}/scene/${sceneId}/${sceneSpeed}/${brightness}`);
+                    // Updated to use query parameters as per the new API
+                    const url = `http://localhost:5000/api/lights/${selectedLight}/scene/${sceneId}?speed=${sceneSpeed}&brightness=${brightness}`;
+                    await fetch(url);
+                    
                     fetchLightState(selectedLight);
+                    showNotification('Adegan berhasil diterapkan', 'success');
                 } catch (error) {
                     console.error("Failed to set scene:", error);
                     $(`.scene-item[data-id="${sceneId}"]`).effect('shake', { times: 3, distance: 5 }, 300);
+                    showNotification('Gagal mengatur adegan', 'error');
                 }
             }
         });

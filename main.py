@@ -1,8 +1,8 @@
 import asyncio
 import ipaddress
 import socket
-from flask import Flask, jsonify
-from pywizlight import wizlight, PilotBuilder, discovery
+from flask import Flask, jsonify, request
+from pywizlight import wizlight, PilotBuilder, discovery 
 from list_scene import SCENES
 from flask_cors import CORS 
 
@@ -23,6 +23,9 @@ def get_broadcast():
     ip_obj = ipaddress.IPv4Interface(f"{local_ip}/24")
     return str(ip_obj.network.broadcast_address)
 
+@app.route('/')
+def main():
+    return app.send_static_file('coba.html')
 
 @app.route('/api', methods=['GET'])
 def api_root():
@@ -114,6 +117,10 @@ async def turn_on_light(ip):
 @app.route('/api/lights/<ip>/brightness/<int:brightness>', methods=['GET'])
 async def set_brightness(ip, brightness):
     try:
+
+        if brightness < 0 or brightness > 255:
+            return jsonify({"status": False, "pesan": "Nilai kecerahan tidak valid (0-255)" }), 400
+
         app.logger.info(f"Memperbarui kecerahan lampu di IP {ip} menjadi {brightness}")
         light = wizlight(ip)
         await light.turn_on(PilotBuilder(brightness=brightness))
@@ -126,6 +133,10 @@ async def set_brightness(ip, brightness):
 @app.route('/api/lights/<ip>/colortemp/<int:colortemp>', methods=['GET'])
 async def set_colortemp(ip, colortemp):
     try:
+
+        if colortemp < 2200 or colortemp > 6500:
+            return jsonify({"status": False, "pesan": "Nilai suhu tidak valid (2200-9000)" }), 400
+
         app.logger.info(f"Memperbarui suhu lampu di IP {ip} menjadi {colortemp}")
         light = wizlight(ip)
         await light.turn_on(PilotBuilder(colortemp=colortemp))
@@ -135,11 +146,31 @@ async def set_colortemp(ip, colortemp):
         return jsonify({"status": False, "pesan": f"Gagal mengatur suhu lampu di IP {ip}" }), 500
     
 # set color and brightness
-@app.route('/api/lights/<ip>/color/<int:red>/<int:green>/<int:blue>/<int:brightness>', methods=['GET'])
-async def set_color(ip, red, green, blue, brightness):
+@app.route('/api/lights/<ip>/color', methods=['GET'])
+async def set_color(ip):
+
+    red = request.args.get('red', type=int)
+    green = request.args.get('green', type=int)
+    blue = request.args.get('blue', type=int)
+    brightness = request.args.get('brightness', type=int)
+
+    if not all([ip, red is not None, green is not None, blue is not None]):
+        return jsonify({"status": False, "pesan": "Parameter ip, red, green, dan blue wajib"}), 400
+
+    if not all([0 <= red <= 255, 0 <= green <= 255, 0 <= blue <= 255]):
+        return jsonify({"status": False, "pesan": "Nilai warna tidak valid (0-255)" }), 400
+
     try:
-        app.logger.info(f"Memperbarui warna dan kecerahan lampu di IP {ip}")
+        app.logger.info(f"Memperbarui lampu di IP {ip}")
         light = wizlight(ip)
+
+        if brightness is None:
+            state = await light.updateState()
+            brightness = state.get_brightness()
+        
+        if brightness < 0 or brightness > 255:
+            return jsonify({"status": False, "pesan": "Nilai kecerahan tidak valid (0-255)" }), 400
+
         await light.turn_on(PilotBuilder(rgb=(red, green, blue), brightness=brightness))
         return jsonify({"status": True, "pesan": "Berhasil mengatur warna dan kecerahan lampu"})
     except Exception as e:
@@ -147,14 +178,24 @@ async def set_color(ip, red, green, blue, brightness):
         return jsonify({"status": False, "pesan": f"Gagal mengatur warna dan kecerahan lampu di IP {ip}" }), 500
     
 # set scene
-@app.route('/api/lights/<ip>/scene/<int:scene_id>/<int:speed>/<int:brightness>', methods=['GET'])
-async def set_scene(ip, scene_id, speed, brightness):
+@app.route('/api/lights/<ip>/scene/<int:scene_id>', methods=['GET'])
+async def set_scene(ip, scene_id):
+
+    speed = request.args.get('speed', type=int)
+    brightness = request.args.get('brightness', type=int)
+
     try:
         if scene_id not in SCENES:
             return jsonify({"status": False, "pesan": f"Scene {scene_id} tidak tersedia"}), 400
 
         app.logger.info(f"Memperbarui scene lampu di IP {ip}")
         light = wizlight(ip)
+
+        if brightness or speed is  None:
+            state = await light.updateState()
+            brightness = state.get_brightness()
+            speed = state.get_speed()
+
         await light.turn_on(PilotBuilder(scene=scene_id, speed=speed, brightness=brightness))
         return jsonify({"status": True, "pesan": "Berhasil mengatur scene lampu"})
     except Exception as e:
