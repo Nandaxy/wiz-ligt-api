@@ -39,7 +39,7 @@ def api_root():
 @app.route('/api/lights/discover', methods=['GET'])
 def discover_lights():
     try:
-        ip_broadcast = get_broadcast()
+        ip_broadcast = get_broadcast() or '192.168.0.255'
         print(ip_broadcast)
         devices = asyncio.run(discovery.discover_lights(broadcast_space=ip_broadcast))
     
