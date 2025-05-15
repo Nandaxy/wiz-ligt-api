@@ -23,9 +23,13 @@ def get_broadcast():
     ip_obj = ipaddress.IPv4Interface(f"{local_ip}/24")
     return str(ip_obj.network.broadcast_address)
 
+from flask import render_template
+
 @app.route('/')
 def main():
-    return app.send_static_file('coba.html')
+    server_url = request.host_url.strip('/')
+    print(server_url)
+    return render_template('coba.html', server_url=server_url)
 
 @app.route('/api', methods=['GET'])
 def api_root():
@@ -36,6 +40,7 @@ def api_root():
 def discover_lights():
     try:
         ip_broadcast = get_broadcast()
+        print(ip_broadcast)
         devices = asyncio.run(discovery.discover_lights(broadcast_space=ip_broadcast))
     
         result = [
