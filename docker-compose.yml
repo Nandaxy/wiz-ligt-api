@@ -1,0 +1,8 @@
+version: '3'
+services:
+  wizlight-api:
+    build: .
+    ports:
+      - "5000:5000"
+    restart: always
+    
